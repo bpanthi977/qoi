@@ -37,7 +37,9 @@
 (defconstant +qoi-op-rgb+ #b11111110)
 
 (defun decode (stream)
-  "decode qoi from `stream' of (unsigned-byte 8)"
+  "decode qoi from `stream' of type (unsigned-byte 8)
+Returns `image' : an 1D array with consecutive pixel values
+Also returns width, height, channels and colorspace values of the image"
   (let ((header (read-uint32-be stream))
         (width (read-uint32-be stream))
         (height (read-uint32-be stream))
@@ -118,7 +120,10 @@
          (setf (aref ,to (+ ,n 3)) (aref ,from (+ ,m 3)))))))
 
 (defun encode (stream image width height channels colorspace)
-  "encode `image' in `qoi' format; writing to `stream' of type (unsigned-byte 8)"
+  "encode `image' in `qoi' format; writing to `stream' of type (unsigned-byte 8)
+`image' is 1D array of size width*height*channels of type (integer 0 255)
+`channels' = 3 or 4 (i.e. RGB or RGBA)
+`colorspace' = 1 or 0; This value doesn't affect the encoding"
   ;; Header
   (loop for char across "qoif"
         do (write-byte (char-code char) stream))

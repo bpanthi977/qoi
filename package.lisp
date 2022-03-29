@@ -2,4 +2,6 @@
 
 (defpackage #:qoi
   (:use #:cl)
-  (:local-nicknames (#:u #:alexandria)))
+  (:local-nicknames (#:u #:alexandria))
+  (:export #:decode
+           #:encode))
