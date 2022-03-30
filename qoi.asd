@@ -1,9 +1,9 @@
 ;;;; qoi.asd
 
 (asdf:defsystem #:qoi
-  :description "Describe qoi here"
-  :author "Your Name <your.name@example.com>"
-  :license  "Specify license here"
+  :description "Library for encoding/decoding QOI (Quite OK Image Format) files"
+  :author "Bibek Panthi <bpanthi977@gmail.com>"
+  :license  "MIT"
   :version "0.0.1"
   :serial t
   :depends-on (#:alexandria)
