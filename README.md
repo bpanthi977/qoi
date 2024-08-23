@@ -18,7 +18,7 @@ To decode a `qoi` file simply:
 
 `encode` takes an binary output stream and an image array then encodes the image and writes it to that stream.
 
-To encode and save an `image` to `output-file` smiply:
+To encode and save an `image` to `output-file` simply:
 ```lisp
 (with-open-file (stream output-file
                         :direction :output
