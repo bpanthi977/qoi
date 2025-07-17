@@ -4,4 +4,5 @@
   (:use #:cl)
   (:local-nicknames (#:u #:alexandria))
   (:export #:decode
-           #:encode))
+           #:encode
+	   #:encode/2))

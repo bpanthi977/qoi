@@ -21,9 +21,9 @@
     `(progn
        ,@(loop for v in values
                for i from 0 below (1- (length values))
-               collect `(setf (aref ,array (+ ,position ,i)) ,v))
+               collect `(setf (row-major-aref ,array (+ ,position ,i)) ,v))
        (when ,last?
-         (setf (aref ,array (+ ,position ,(1- (length values)))) ,(car (last values)))))))
+         (setf (row-major-aref ,array (+ ,position ,(1- (length values)))) ,(car (last values)))))))
 
 (defconstant +qoi-magic+
   (reduce (lambda (a b) (+ (* a (expt 2 8)) b))
@@ -36,9 +36,11 @@
 (defconstant +qoi-op-rgba+ #b11111111)
 (defconstant +qoi-op-rgb+ #b11111110)
 
-(defun decode (stream)
+(defun decode (stream &key (return-type :flat))
   "decode qoi from `stream' of type (unsigned-byte 8)
-Returns `image' : an 1D array with consecutive pixel values
+Returns `image' which is 1D or 3D depending on `return-type'
+- return-type = :flat => an 1D array with consecutive pixel values
+- return-type = :3d   => an 3D array of shape (height width channels)
 Also returns width, height, channels and colorspace values of the image"
   (let ((header (read-uint32-be stream))
         (width (read-uint32-be stream))
@@ -54,7 +56,9 @@ Also returns width, height, channels and colorspace values of the image"
     (let* ((r 0) (g 0) (b 0) (a 255)
            (alphap (= channels 4))
            (size (* width height channels))
-           (image (make-array size :element-type '(unsigned-byte 8)))
+           (image (case return-type
+		    (:flat (make-array size :element-type '(unsigned-byte 8)))
+		    (:3d (make-array (list height width channels) :element-type '(unsigned-byte 8)))))
            (indexarray (make-array (* 64 channels)
                                    :element-type '(unsigned-byte 8)))
            (i 0))
@@ -115,13 +119,15 @@ Also returns width, height, channels and colorspace values of the image"
   (u:once-only (from m to n)
     `(progn
        ,@(loop for i from 0 to 2
-               collect `(setf (aref ,to (+ ,n ,i)) (aref ,from (+ ,m ,i))))
+               collect `(setf (aref ,to (+ ,n ,i)) (row-major-aref ,from (+ ,m ,i))))
        (when ,alphap
-         (setf (aref ,to (+ ,n 3)) (aref ,from (+ ,m 3)))))))
+         (setf (aref ,to (+ ,n 3)) (row-major-aref ,from (+ ,m 3)))))))
 
 (defun encode (stream image width height channels colorspace)
   "encode `image' in `qoi' format; writing to `stream' of type (unsigned-byte 8)
-`image' is 1D array of size width*height*channels of type (integer 0 255)
+`image' is either
+- 1D array of size height*width*channels of type (integer 0 255)
+- 3D array of shape (height width channel) of type (integer 0 255)
 `channels' = 3 or 4 (i.e. RGB or RGBA)
 `colorspace' = 1 or 0; This value doesn't affect the encoding"
   ;; Header
@@ -233,3 +239,8 @@ Also returns width, height, channels and colorspace values of the image"
                        do (write-byte (aref pixel i) stream))))
            (index-pixel)))))
   stream)
+
+(defun encode/2 (stream image colorspace)
+  "Same as encode but the `image' is a 3D array so shape and channel info is not required."
+  (destructuring-bind (height width channels) (array-dimensions image)
+    (encode stream image width height channels colorspace)))
